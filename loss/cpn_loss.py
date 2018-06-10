@@ -26,7 +26,7 @@ class CPNLoss(nn.Module):
             vis_masks (torch.tensor): [batch_size, num_keypoints]
                 Masks that indicate whether keypoints exist for each image.
             ohkm (float):
-                Stands for 'Online Hard Keypoints Mining' rate. Closely
+                Stands for 'Online Hard Keypoints Mining (OHKM)'. Closely
                 related to 'Online Hard Example Mining (OHEM)'. Read:
                 http://www.erogol.com/online-hard-example-mining-pytorch/
 
@@ -68,17 +68,13 @@ class CPNLoss(nn.Module):
         # We first sum across each pixels (i.e. `h * w`) with `sum(2)`,
         # then we sum across the batches (i.e. `batch_size`). We left with a
         # 1D-tensor with size `num_keypoints` for the category. Note that we
-        # added epsilon in denomintor for numerical stability.
+        # added epsilon in denominator for numerical stability.
         # TODO: Do we really need to normalize the loss?
         epsilon = 0.0001
         easy_loss = (diff * easy_ids).sum(2).sum(0) / (easy_ids.sum(2).sum(0) + epsilon)
         hard_loss = (diff * hard_ids).sum(2).sum(0) / (hard_ids.sum(2).sum(0) + epsilon)
 
         total_loss = 0.5 * easy_loss + 0.5 * hard_loss
-
-        # Find the top-k highest loss across all keypoints in each category.
-        # Large loss = hard predictions = need to backprop.
-        # Small loss = easy predictions = we just ignore it without backprop
 
         # Find the top-k keypoints that give us the highest loss.
         # High loss = hard predictions = Need to backprop to update NN weights.
