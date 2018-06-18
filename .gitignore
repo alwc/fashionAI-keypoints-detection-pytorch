@@ -427,3 +427,5 @@ TSWLatexianTemp*
 # Pytorch
 .data/
 .vector_cache/
+
+.git/

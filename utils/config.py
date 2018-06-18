@@ -24,24 +24,40 @@ class Config:
     gpu = '0'
     visual = False
 
-    model_dict = {'ensemble': ('CascadedPyramidResNet', 'CascadedPyramidSENet'),
-                  'cpn-resnet': 'CascadedPyramidResNet',
-                  'cpn-senet': 'CascadedPyramidSENet'}
+    model_dict = {
+        'ensemble': ('CascadedPyramidResNet', 'CascadedPyramidSENet'),
+        'cpn-resnet': 'CascadedPyramidResNet',
+        'cpn-senet': 'CascadedPyramidSENet'
+    }
     model = None
 
     # > FashionAI keypoints dataset
-    kp_dict = {'blouse' : ['neckline_left', 'neckline_right', 'center_front', 'shoulder_left', 'shoulder_right',
-                           'armpit_left', 'armpit_right', 'cuff_left_in', 'cuff_left_out', 'cuff_right_in',
-                           'cuff_right_out', 'top_hem_left', 'top_hem_right'],
-               'outwear' : ['neckline_left', 'neckline_right', 'shoulder_left', 'shoulder_right', 'armpit_left',
-                            'armpit_right', 'waistline_left', 'waistline_right', 'cuff_left_in', 'cuff_left_out',
-                            'cuff_right_in', 'cuff_right_out', 'top_hem_left', 'top_hem_right'],
-               'trousers' : ['waistband_left', 'waistband_right', 'crotch', 'bottom_left_in', 'bottom_left_out',
-                             'bottom_right_in', 'bottom_right_out'],
-               'skirt' : ['waistband_left', 'waistband_right', 'hemline_left', 'hemline_right'],
-               'dress' : ['neckline_left', 'neckline_right', 'center_front', 'shoulder_left', 'shoulder_right',
-                          'armpit_left', 'armpit_right', 'waistline_left', 'waistline_right', 'cuff_left_in',
-                          'cuff_left_out', 'cuff_right_in', 'cuff_right_out', 'hemline_left', 'hemline_right']}
+    kp_dict = {
+        'blouse': [
+            'neckline_left', 'neckline_right', 'center_front', 'shoulder_left',
+            'shoulder_right', 'armpit_left', 'armpit_right', 'cuff_left_in',
+            'cuff_left_out', 'cuff_right_in', 'cuff_right_out', 'top_hem_left',
+            'top_hem_right'
+        ],
+        'outwear': [
+            'neckline_left', 'neckline_right', 'shoulder_left',
+            'shoulder_right', 'armpit_left', 'armpit_right', 'waistline_left',
+            'waistline_right', 'cuff_left_in', 'cuff_left_out',
+            'cuff_right_in', 'cuff_right_out', 'top_hem_left', 'top_hem_right'
+        ],
+        'trousers': [
+            'waistband_left', 'waistband_right', 'crotch', 'bottom_left_in',
+            'bottom_left_out', 'bottom_right_in', 'bottom_right_out'
+        ],
+        'skirt':
+        ['waistband_left', 'waistband_right', 'hemline_left', 'hemline_right'],
+        'dress': [
+            'neckline_left', 'neckline_right', 'center_front', 'shoulder_left',
+            'shoulder_right', 'armpit_left', 'armpit_right', 'waistline_left',
+            'waistline_right', 'cuff_left_in', 'cuff_left_out',
+            'cuff_right_in', 'cuff_right_out', 'hemline_left', 'hemline_right'
+        ]
+    }
 
     category = None
     keypoints = None
