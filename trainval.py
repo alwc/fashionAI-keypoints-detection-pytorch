@@ -112,8 +112,6 @@ def main(**kwargs):
     # 5. Initialize checkpoints directory
     lr = opt.lr
     save_dir = opt.checkpoint_path
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
     resume = False
 
     start_epoch = 1
