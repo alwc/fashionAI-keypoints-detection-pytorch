@@ -94,8 +94,6 @@ def main(**kwargs):
 
     # 6. Initialize checkpoints directory
     lr = opt.lr
-    resume = False
-
     start_epoch = 1
     best_val_loss = float('inf')
 
@@ -155,6 +153,7 @@ def main(**kwargs):
         if val_loss < best_val_loss or epoch % 10 == 0 or lr is None:
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+
             state_dict = net.module.state_dict()
 
             for key in state_dict.keys():
@@ -166,8 +165,7 @@ def main(**kwargs):
                 'state_dict': state_dict,
                 'lr': lr,
                 'best_val_loss': best_val_loss
-            }, opt.checkpoint_path / 'kpt_{}_{:03d}.ckpt'.format(
-                opt.category, epoch))
+            }, opt.checkpoint_path / 'kpt_{}_{:03d}.ckpt'.format(opt.category, epoch))
 
         if lr is None:
             logging.info('Training is early-stopped')
