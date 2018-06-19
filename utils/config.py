@@ -6,8 +6,14 @@ class Config:
     # > File paths
     proj_path = Path('/shared_folder/')
     db_path = proj_path / 'data/tianchi/fashionAI_key_points/'
-    checkpoint_path = (db_path / 'checkpoints/').mkdir(exist_ok=True)
-    pred_path = (db_path / 'kp_predictions/').mkdir(exist_ok=True)
+
+    checkpoint_path = db_path / 'checkpoints/'
+    pred_path = db_path / 'kp_predictions/'
+    log_path = db_path / 'logs/'
+    checkpoint_path.mkdir(exist_ok=True)
+    pred_path.mkdir(exist_ok=True)
+    log_path.mkdir(exist_ok=True)
+
     load_checkpoint_path = None
     load_checkpoint_path_2 = None
 
