@@ -3,6 +3,8 @@ from pathlib import Path
 
 
 class Config:
+    debug = False
+
     # > File paths
     proj_path = Path('/shared_folder/')
     db_path = proj_path / 'data/tianchi/fashionAI_key_points/'

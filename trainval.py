@@ -1,4 +1,4 @@
-import argparse
+import logging
 import os
 import sys
 import time
@@ -15,29 +15,8 @@ import models
 import utils
 from datasets import FashionAIKeypoints
 from loss import CPNLoss
-from utils import LRScheduler
+from utils import LRScheduler, initialize_logger, log_model
 from utils.config import opt
-
-
-def print_log(category, epoch, lr, train_metrics, train_time, val_metrics=None, val_time=None, save_dir=None, log_mode=None):
-    if epoch > 1:
-        log_mode = 'a'
-    train_metrics = np.mean(train_metrics, axis=0)
-    str0 = 'Epoch %03d (lr %.7f)' % (epoch, lr)
-    str1 = 'Train:      time %3.2f loss: %2.4f loss1: %2.4f loss2: %2.4f' \
-           % (train_time, train_metrics[0], train_metrics[1], train_metrics[2])
-    print(str0)
-    print(str1)
-    f = open(save_dir + 'kpt_' + category + '_train_log.txt', log_mode)
-    f.write(str0 + '\n')
-    f.write(str1 + '\n')
-    if val_time is not None:
-        val_metrics = np.mean(val_metrics, axis=0)
-        str2 = 'Validation: time %3.2f loss: %2.4f loss1: %2.4f loss2: %2.4f' \
-               % (val_time, val_metrics[0], val_metrics[1], val_metrics[2])
-        print(str2 + '\n')
-        f.write(str2 + '\n\n')
-    f.close()
 
 
 def train(data_loader, net, loss, optimizer, lr):
@@ -48,7 +27,7 @@ def train(data_loader, net, loss, optimizer, lr):
 
     metrics = []
     for i, (input_imgs, heatmaps, vis_masks) in enumerate(data_loader):
-        print("train loop ", i)
+        logging.info("train loop ", i)
         input_imgs = input_imgs.cuda(async=True)
         heatmaps = heatmaps.cuda(async=True)
         vis_masks = vis_masks.cuda(async=True)
@@ -105,31 +84,32 @@ def main(**kwargs):
     # n_gpu = utils.set_gpu('0,1')
 
     # 4. Configure model
-    print('==> Traing model for clothing type: {}'.format(opt.category))
+    logging.info('==> Traing model for clothing type: {}'.format(opt.category))
     cudnn.benchmark = True
     net = getattr(models, opt.model)(opt)
 
-    # 5. Initialize checkpoints directory
+    # 5. Initialize logger
+    cur_time = time.strftime('%Y-%m-%dT%H:%M:%S', timm.localtime())
+    initialize_logger(f'{opt.category}_{opt.model}_{cur_time}')
+
+    # 6. Initialize checkpoints directory
     lr = opt.lr
-    save_dir = opt.checkpoint_path
     resume = False
 
     start_epoch = 1
     best_val_loss = float('inf')
-    log_mode = 'w'
 
     if opt.load_checkpoint_path:
-        print('==> Resuming from checkpoint...')
+        logging.info('==> Resuming from checkpoint...')
         checkpoint = torch.load(opt.load_checkpoint_path)
         start_epoch = checkpoint['epoch'] + 1
         lr = checkpoint['lr']
         best_val_loss = checkpoint['best_val_loss']
         net.load_state_dict(checkpoint['state_dict'])
-        log_mode = 'a'
 
-    # 6. Data setup
+    # 7. Data setup
     train_dataset = FashionAIKeypoints(opt, phase='train')
-    print('Train sample number: {}'.format(len(train_dataset)))
+    logging.info('Train sample number: {}'.format(len(train_dataset)))
     train_loader = DataLoader(train_dataset,
                               batch_size=opt.batch_size,
                               shuffle=True,
@@ -138,7 +118,7 @@ def main(**kwargs):
                               pin_memory=True)
 
     val_dataset = FashionAIKeypoints(opt, phase='val')
-    print('Val sample number: {}'.format(len(val_dataset)))
+    logging.info('Val sample number: {}'.format(len(val_dataset)))
     val_loader = DataLoader(val_dataset,
                             batch_size=opt.batch_size,
                             shuffle=False,
@@ -151,23 +131,22 @@ def main(**kwargs):
     loss = CPNLoss()
     loss = loss.cuda()
 
-    # 7. Loss, optimizer and LR scheduler
+    # 8. Loss, optimizer and LR scheduler
     optimizer = torch.optim.SGD(net.parameters(), lr, momentum=0.9, weight_decay=1e-4)
     lrs = LRScheduler(lr, patience=3, factor=0.1, min_lr=0.01*lr, best_loss=best_val_loss)
 
-    # 8. Training loop
+    # 9. Training loop
     for epoch in range(start_epoch, opt.max_epochs + 1):
         # Training
-        print("Start training loop...")
+        logging.info("Start training loop...")
         train_metrics, train_time = train(train_loader, net, loss, optimizer, lr)
 
         # Validating
-        print("Start validating loop...")
+        logging.info("Start validating loop...")
         with torch.no_grad():
             val_metrics, val_time = validate(val_loader, net, loss)
 
-        print_log(opt.category, epoch, lr, train_metrics, train_time,
-                  val_metrics, val_time, save_dir=save_dir, log_mode=log_mode)
+        log_model(epoch, lr, train_metrics, train_time, val_metrics, val_time)
 
         val_loss = np.mean(val_metrics[:, 0])
         lr = lrs.update_by_rule(val_loss)
@@ -183,14 +162,15 @@ def main(**kwargs):
 
             torch.save({
                 'epoch': epoch,
-                'save_dir': save_dir,
+                'save_dir': opt.checkpoint_path,
                 'state_dict': state_dict,
                 'lr': lr,
-                'best_val_loss': best_val_loss},
-                opt.checkpoint_path / 'kpt_{}_{:03d}.ckpt'.format(opt.category, epoch))
+                'best_val_loss': best_val_loss
+            }, opt.checkpoint_path / 'kpt_{}_{:03d}.ckpt'.format(
+                opt.category, epoch))
 
         if lr is None:
-            print('Training is early-stopped')
+            logging.info('Training is early-stopped')
             break
 
 if __name__ == '__main__':
